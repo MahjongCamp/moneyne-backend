@@ -23,6 +23,9 @@ public class User {
 
     private String avatarUrl;
 
+    @TableField(exist = false)
+    private String verifyCode;
+
     @TableField(fill = FieldFill.INSERT)
     private Date createTime;
 

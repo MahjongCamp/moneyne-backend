@@ -21,7 +21,8 @@ public class SaTokenConfigure implements WebMvcConfigurer {
                 .excludePathPatterns("/user/login")
                 .excludePathPatterns("/user/isLogin")
                 .excludePathPatterns("/user/checkoutUsername")
-                .excludePathPatterns("/user/signIn");
+                .excludePathPatterns("/user/signIn")
+                .excludePathPatterns("/user/sendVerifyCode");
     }
 
     // Sa-Token 整合 jwt (mixin 混合模式)
