@@ -28,8 +28,8 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Build with Maven
-      clean: mvn clean install -DskipTests --file pom.xml
-      intstall: mvn clean install -Dmaven.test.skip=true --file pom.xml
+      run: mvn -B package --file pom.xml
+
 
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
     - name: Update dependency graph
