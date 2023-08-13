@@ -93,5 +93,12 @@
             </plugin>
         </plugins>
     </build>
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>moneyne-backend Maven Packages</name>
+            <url>hppts://maven.pkg.github.com/MahjongCamp/moneyne-backend</url>
+        </repository>
+    </distributionManagement>
 
 </project>

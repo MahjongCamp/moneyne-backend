@@ -1,6 +1,9 @@
 package org.mahjongcamp.moneynebackend.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.cache.Cache;
+import cn.hutool.cache.CacheUtil;
+import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestAlgorithm;
@@ -29,6 +32,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     Digester md5 = new Digester(DigestAlgorithm.MD5);
 
+    Cache<String, String> lfuCache = CacheUtil.newLFUCache(7);
+
     @Override
     public User findUserByName(String username) {
         LambdaQueryWrapper<User> q = new LambdaQueryWrapper<User>();
@@ -44,7 +49,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String psw = md5.digestHex(user.getPassword());
         user.setPassword(psw);
         //邮箱验证码比较
-        String code = (String) StpUtil.getSession().getDataMap().get(user.getUsername());
+//        String code = (String) StpUtil.getSession().getDataMap().get(user.getUsername());
+        //从缓存中获取验证码数据
+        String code = lfuCache.get(user.getUsername());
         if (!code.equals(user.getVerifyCode())) {
             throw new RuntimeException("验证码不正确");
         }
@@ -98,6 +105,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .setHtml(true)
                 .send();
         //将验证码存储到session中，用于等会比较
-        StpUtil.getSession().set(user.getUsername(), code);
+//        StpUtil.getSession().set(user.getUsername(), code);
+        //存入缓存
+
+        lfuCache.put(user.getUsername(), code);
     }
 }
