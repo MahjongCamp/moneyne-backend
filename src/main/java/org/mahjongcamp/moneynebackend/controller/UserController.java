@@ -3,19 +3,13 @@ package org.mahjongcamp.moneynebackend.controller;
 import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
-import cn.hutool.cache.Cache;
-import cn.hutool.cache.CacheUtil;
-import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.extra.mail.MailUtil;
 import org.mahjongcamp.moneynebackend.entity.User;
 import org.mahjongcamp.moneynebackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.GeneralSecurityException;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/user/")
