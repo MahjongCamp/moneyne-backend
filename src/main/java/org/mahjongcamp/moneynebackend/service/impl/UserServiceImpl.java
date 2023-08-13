@@ -56,7 +56,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new RuntimeException("验证码不正确");
         }
         save(user);
-        StpUtil.login(findUserByName(user.getUsername()).getId());
+        //是否限制该账号同端互斥登录
+        String device = user.getDevice();
+        if (StrUtil.isBlank(device)){
+            StpUtil.login(findUserByName(user.getUsername()).getId());
+        }else {
+            StpUtil.login(findUserByName(user.getUsername()).getId(),device);
+        }
         StpUtil.getSession().set("user", user);
     }
 
@@ -72,7 +78,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!StrUtil.contains(psw,one.getPassword())){
             return false;
         }
-        StpUtil.login(one.getId());
+        //是否限制该账号同端互斥登录
+        String device = user.getDevice();
+        if (StrUtil.isBlank(device)){
+            StpUtil.login(one.getId());
+        }else {
+            StpUtil.login(one.getId(),device);
+        }
         StpUtil.getSession().set("user", user);
         return true;
     }
@@ -107,7 +119,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //将验证码存储到session中，用于等会比较
 //        StpUtil.getSession().set(user.getUsername(), code);
         //存入缓存
-
         lfuCache.put(user.getUsername(), code);
     }
 }
