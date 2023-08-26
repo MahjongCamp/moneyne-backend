@@ -4,6 +4,8 @@ import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.util.StrUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.mahjongcamp.moneynebackend.entity.User;
 import org.mahjongcamp.moneynebackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,22 +15,20 @@ import java.security.GeneralSecurityException;
 
 @RestController
 @RequestMapping("/user/")
+@Tag(name = "用户接口")
 public class UserController {
 
     @Autowired
     private UserService service;
 
-    @RequestMapping("test")
-    public String test(){
-        return "hello world";
-    }
-
+    @Operation(summary = "当前会话是否登录")
     @RequestMapping("isLogin")
     public String isLogin(){
         return "当前会话是否登录：" + StpUtil.isLogin();
     }
 
     //检查用户名是否被使用
+    @Operation(summary = "检查用户名是否被使用",description = "检查用户名是否被使用")
     @PostMapping("checkoutUsername")
     public SaResult checkoutUsername(@RequestBody User user){
         User userByName = service.findUserByName(user.getUsername());
@@ -36,6 +36,7 @@ public class UserController {
         return SaResult.ok("用户名可以使用！");
     }
 
+    @Operation(summary = "注册",description = "注册")
     @PostMapping("signIn")
     public SaResult signIn(@RequestBody User user) {
         if (StrUtil.isBlank(user.getUsername())
@@ -47,12 +48,14 @@ public class UserController {
         return SaResult.ok("注册成功");
     }
 
+    @Operation(summary = "发送邮箱验证码",description = "发送邮箱验证码")
     @PostMapping("sendVerifyCode")
     public SaResult sendVerifyCode(@RequestBody User user) throws GeneralSecurityException {
         service.sendVerifyCode(user);
         return SaResult.ok();
     }
 
+    @Operation(summary = "登录",description = "登录")
     @PostMapping("login")
     public SaResult login(@RequestBody User user) {
         Boolean flag = service.login(user);
@@ -64,6 +67,7 @@ public class UserController {
         }
     }
 
+    @Operation(summary = "登出",description = "登出")
     @RequestMapping("logout")
     public SaResult logout(){
         StpUtil.logout();
