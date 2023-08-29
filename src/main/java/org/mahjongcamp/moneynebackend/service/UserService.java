@@ -14,4 +14,10 @@ public interface UserService extends IService<User> {
     Boolean login(User user);
 
     void sendVerifyCode(User user) throws GeneralSecurityException;
+
+    void modifyPassword(User user);
+
+    void modifyUsername(User user);
+
+    void forgetPass(User user);
 }

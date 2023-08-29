@@ -12,6 +12,7 @@ import cn.hutool.extra.mail.Mail;
 import cn.hutool.extra.mail.MailAccount;
 import cn.hutool.extra.mail.MailUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sun.mail.util.MailSSLSocketFactory;
 import org.mahjongcamp.moneynebackend.entity.Email;
@@ -51,7 +52,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //邮箱验证码比较
 //        String code = (String) StpUtil.getSession().getDataMap().get(user.getUsername());
         //从缓存中获取验证码数据
-        String code = lfuCache.get(user.getUsername());
+        String code = lfuCache.get(user.getEmailAdd());
         if (!code.equals(user.getVerifyCode())) {
             throw new RuntimeException("验证码不正确");
         }
@@ -63,7 +64,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }else {
             StpUtil.login(findUserByName(user.getUsername()).getId(),device);
         }
-        StpUtil.getSession().set("user", user);
+        LambdaQueryWrapper<User> q = new LambdaQueryWrapper<User>();
+        q.eq(User::getUsername,user.getUsername());
+        User one = getOne(q);
+        StpUtil.getSession().set("user", one);
     }
 
     @Override
@@ -75,7 +79,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         q.eq(User::getUsername,user.getUsername());
         User one = getOne(q);
         String psw = md5.digestHex(user.getPassword());
-        if (!StrUtil.contains(psw,one.getPassword())){
+        if (!StrUtil.equals(psw,one.getPassword())){
             return false;
         }
         //是否限制该账号同端互斥登录
@@ -85,7 +89,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }else {
             StpUtil.login(one.getId(),device);
         }
-        StpUtil.getSession().set("user", user);
+        StpUtil.getSession().set("user", one);
         return true;
     }
 
@@ -119,6 +123,47 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //将验证码存储到session中，用于等会比较
 //        StpUtil.getSession().set(user.getUsername(), code);
         //存入缓存
-        lfuCache.put(user.getUsername(), code);
+        lfuCache.put(user.getEmailAdd(), code);
     }
+
+    @Override
+    public void modifyPassword(User user) {
+        //当前登录用户
+        StpUtil.getLoginId();
+        User currentUser = new User().getCurrentUser();
+        String psw = md5.digestHex(user.getPassword());
+        if (!StrUtil.equals(psw,currentUser.getPassword())){
+            throw new RuntimeException("密码错误");
+        }
+        if (StrUtil.isBlank(user.getNPass())){
+            throw new RuntimeException("新密码不可为空");
+        }
+        currentUser.setPassword(md5.digestHex(user.getNPass()));
+        updateById(currentUser);
+    }
+
+    @Override
+    public void modifyUsername(User user) {
+        //当前登录用户
+        User currentUser = new User().getCurrentUser();
+        if (StrUtil.isBlank(user.getUsername())){
+            throw new RuntimeException("新用户名不可为空");
+        }
+        currentUser.setUsername(user.getUsername());
+        updateById(currentUser);
+    }
+
+    @Override
+    public void forgetPass(User user) {
+        //验证码
+        String code = lfuCache.get(user.getEmailAdd());
+        if (StrUtil.isBlank(code) || !code.equals(user.getVerifyCode())) {
+            throw new RuntimeException("验证码不正确");
+        }
+        LambdaQueryWrapper<User> q = new LambdaQueryWrapper<>();
+        User one = getOne(q.eq(User::getEmailAdd,user.getEmailAdd()));
+        one.setPassword(md5.digestHex(user.getNPass()));
+        updateById(one);
+    }
+
 }

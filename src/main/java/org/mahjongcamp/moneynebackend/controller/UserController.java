@@ -73,4 +73,25 @@ public class UserController {
         StpUtil.logout();
         return SaResult.ok("注销成功");
     }
+
+    @Operation(summary = "修改密码")
+    @PostMapping("modifyPassword")
+    public SaResult modifyPassword(@RequestBody User user) {
+        service.modifyPassword(user);
+        return SaResult.ok("修改成功");
+    }
+
+    @Operation(summary = "修改用户名")
+    @PostMapping("modifyUsername")
+    public SaResult modifyUsername(@RequestBody User user) {
+        service.modifyUsername(user);
+        return SaResult.ok("修改成功");
+    }
+
+    @Operation(summary = "忘记密码")
+    @PostMapping("forgetPass")
+    public SaResult forgetPass(@RequestBody User user) {
+        service.forgetPass(user);
+        return SaResult.ok("修改成功");
+    }
 }

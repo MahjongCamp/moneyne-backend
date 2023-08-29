@@ -17,6 +17,9 @@ public class User {
 
     private String password;
 
+    @TableField(exist = false)
+    private String nPass;
+
     private String emailAdd;
 
     private Integer phoneNumber;
