@@ -7,11 +7,11 @@ import java.security.GeneralSecurityException;
 
 public interface UserService extends IService<User> {
 
-    User findUserByName(String username);
+    User findUserByEmail(String emailAdd);
 
-    void sign(User user);
+    User sign(User user);
 
-    Boolean login(User user);
+    User login(User user);
 
     void sendVerifyCode(User user) throws GeneralSecurityException;
 

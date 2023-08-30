@@ -36,16 +36,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     Cache<String, String> lfuCache = CacheUtil.newLFUCache(7);
 
     @Override
-    public User findUserByName(String username) {
+    public User findUserByEmail(String emailAdd) {
         LambdaQueryWrapper<User> q = new LambdaQueryWrapper<User>();
-        q.eq(User::getUsername,username);
+        q.eq(User::getEmailAdd,emailAdd);
         return getOne(q);
     }
 
     @Override
-    public void sign(User user) {
-        if (findUserByName(user.getUsername()) != null) {
-            throw new RuntimeException("用户名重复");
+    public User sign(User user) {
+        if (findUserByEmail(user.getEmailAdd()) != null) {
+            throw new RuntimeException("邮箱重复");
         }
         String psw = md5.digestHex(user.getPassword());
         user.setPassword(psw);
@@ -53,34 +53,35 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 //        String code = (String) StpUtil.getSession().getDataMap().get(user.getUsername());
         //从缓存中获取验证码数据
         String code = lfuCache.get(user.getEmailAdd());
-        if (!code.equals(user.getVerifyCode())) {
+        if (StrUtil.isBlank(code) || !code.equals(user.getVerifyCode())) {
             throw new RuntimeException("验证码不正确");
         }
         save(user);
         //是否限制该账号同端互斥登录
         String device = user.getDevice();
         if (StrUtil.isBlank(device)){
-            StpUtil.login(findUserByName(user.getUsername()).getId());
+            StpUtil.login(findUserByEmail(user.getEmailAdd()).getId());
         }else {
-            StpUtil.login(findUserByName(user.getUsername()).getId(),device);
+            StpUtil.login(findUserByEmail(user.getEmailAdd()).getId(),device);
         }
         LambdaQueryWrapper<User> q = new LambdaQueryWrapper<User>();
-        q.eq(User::getUsername,user.getUsername());
+        q.eq(User::getEmailAdd,user.getEmailAdd());
         User one = getOne(q);
         StpUtil.getSession().set("user", one);
+        return one;
     }
 
     @Override
-    public Boolean login(User user) {
-        if (findUserByName(user.getUsername()) == null) {
-            return false;
+    public User login(User user) {
+        if (findUserByEmail(user.getEmailAdd()) == null) {
+            throw new RuntimeException("用户名或密码错误");
         }
         LambdaQueryWrapper<User> q = new LambdaQueryWrapper<User>();
-        q.eq(User::getUsername,user.getUsername());
+        q.eq(User::getEmailAdd,user.getEmailAdd());
         User one = getOne(q);
         String psw = md5.digestHex(user.getPassword());
         if (!StrUtil.equals(psw,one.getPassword())){
-            return false;
+            throw new RuntimeException("用户名或密码错误");
         }
         //是否限制该账号同端互斥登录
         String device = user.getDevice();
@@ -90,7 +91,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             StpUtil.login(one.getId(),device);
         }
         StpUtil.getSession().set("user", one);
-        return true;
+        return one;
     }
 
     @Override

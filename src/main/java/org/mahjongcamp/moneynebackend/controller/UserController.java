@@ -4,6 +4,9 @@ import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSON;
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.mahjongcamp.moneynebackend.entity.User;
@@ -12,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.GeneralSecurityException;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/user/")
@@ -28,24 +33,28 @@ public class UserController {
     }
 
     //检查用户名是否被使用
-    @Operation(summary = "检查用户名是否被使用",description = "检查用户名是否被使用")
-    @PostMapping("checkoutUsername")
-    public SaResult checkoutUsername(@RequestBody User user){
-        User userByName = service.findUserByName(user.getUsername());
-        if (userByName != null) return SaResult.error("用户名已被使用！");
-        return SaResult.ok("用户名可以使用！");
+    @Operation(summary = "检查邮箱是否可用",description = "检查邮箱是否可用")
+    @PostMapping("checkoutEmailAdd")
+    public SaResult checkoutEmailAdd(@RequestBody User user){
+        User userByEmail = service.findUserByEmail(user.getUsername());
+        if (userByEmail != null) return SaResult.error("邮箱已被使用！");
+        return SaResult.ok("邮箱可以使用！");
     }
 
     @Operation(summary = "注册",description = "注册")
     @PostMapping("signIn")
     public SaResult signIn(@RequestBody User user) {
-        if (StrUtil.isBlank(user.getUsername())
+        if (StrUtil.isBlank(user.getEmailAdd())
                 &&StrUtil.isBlank(user.getPassword())
                 &&StrUtil.isBlank(user.getEmailAdd())) {
-            return SaResult.error("用户名密码不能为空");
+            return SaResult.error("邮箱密码不能为空");
         }
-        service.sign(user);
-        return SaResult.ok("注册成功");
+        User userInfo = service.sign(user);
+        userInfo.setPassword(null);
+        Map<String, Object> map = new HashMap<>();
+        map.put("token",StpUtil.getTokenInfo().getTokenValue());
+        map.put("userInfo", new JSONObject(userInfo));
+        return SaResult.data(map);
     }
 
     @Operation(summary = "发送邮箱验证码",description = "发送邮箱验证码")
@@ -58,13 +67,12 @@ public class UserController {
     @Operation(summary = "登录",description = "登录")
     @PostMapping("login")
     public SaResult login(@RequestBody User user) {
-        Boolean flag = service.login(user);
-        if (flag){
-            SaTokenInfo tokenInfo = StpUtil.getTokenInfo();
-            return SaResult.data(tokenInfo);
-        }else {
-            return SaResult.error("用户名或密码错误");
-        }
+        User userInfo = service.login(user);
+        userInfo.setPassword(null);
+        Map<String, Object> map = new HashMap<>();
+        map.put("token",StpUtil.getTokenInfo().getTokenValue());
+        map.put("userInfo", new JSONObject(userInfo));
+        return SaResult.data(map);
     }
 
     @Operation(summary = "登出",description = "登出")
